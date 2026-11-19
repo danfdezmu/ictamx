@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { Link, usePage } from '@inertiajs/vue3';
 import { computed } from 'vue';
-import { BookOpen, FolderGit2, FolderOpen, Images, LayoutGrid } from '@lucide/vue';
+import { BookOpen, FolderGit2, FolderOpen, Images, LayoutGrid, Music } from '@lucide/vue';
 import AppLogo from '@/components/AppLogo.vue';
 import NavFooter from '@/components/NavFooter.vue';
 import NavMain from '@/components/NavMain.vue';
@@ -30,6 +30,14 @@ const mainNavItems = computed<NavItem[]>(() => {
             icon: LayoutGrid,
         },
     ];
+
+    if (typeof page.props.chordSystem === 'string') {
+        items.push({
+            title: 'ChordSystem',
+            href: page.props.chordSystem,
+            icon: Music,
+        });
+    }
 
     if (page.props.auth.can?.manageGallery) {
         items.push(

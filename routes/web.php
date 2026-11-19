@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\AlbumController;
 use App\Http\Controllers\AlbumPhotoController;
+use App\Http\Controllers\ChordSystemController;
 use App\Http\Controllers\GalleryPhotoController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\PublicGalleryController;
@@ -17,6 +18,8 @@ Route::get('sso/logout', SsoLogoutController::class)->name('sso.logout');
 
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::inertia('dashboard', 'Dashboard')->name('dashboard');
+
+    Route::get('chordsystem', ChordSystemController::class)->name('chordsystem');
 
     Route::resource('gallery', GalleryPhotoController::class)
         ->only(['index', 'destroy'])

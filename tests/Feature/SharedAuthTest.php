@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Middleware\HandleInertiaRequests;
 use App\Models\User;
 use App\Support\SharedAuth;
 
@@ -79,6 +80,66 @@ test('a logout link with a bad signature is rejected', function () {
         ->assertForbidden();
 
     $this->assertAuthenticated();
+});
+
+test('the sidebar sends the open church session into chordsystem', function () {
+    $user = User::factory()->create();
+    $accept = 'http://chordsystem.test/sso/accept';
+
+    $this->actingAs($user)
+        ->get(route('dashboard'))
+        ->assertInertia(fn ($page) => $page->where('chordSystem', '/chordsystem'));
+
+    $response = $this->actingAs($user)->get(route('chordsystem'));
+
+    $response->assertRedirect();
+    $location = (string) $response->headers->get('Location');
+    expect($location)->toStartWith($accept.'?token=');
+
+    parse_str((string) parse_url($location, PHP_URL_QUERY), $query);
+    $identity = SharedAuth::readToken((string) $query['token']);
+
+    expect($identity)->not->toBeNull()
+        ->and($identity['email'])->toBe(mb_strtolower($user->email));
+
+    $version = (string) app(HandleInertiaRequests::class)->version(request());
+
+    $inertia = $this->actingAs($user)
+        ->withHeaders([
+            'X-Inertia' => 'true',
+            'X-Inertia-Version' => $version,
+        ])
+        ->get(route('chordsystem'));
+
+    $inertia->assertStatus(409);
+    expect((string) $inertia->headers->get('X-Inertia-Location'))->toStartWith($accept.'?token=');
+});
+
+test('a guest is asked to sign in before opening chordsystem', function () {
+    $this->get(route('chordsystem'))->assertRedirect(route('login'));
+});
+
+test('chordsystem stays hidden when the shared session is off', function () {
+    config([
+        'shared-auth.secret' => '',
+        'shared-auth.role' => 'provider',
+    ]);
+
+    $user = User::factory()->create();
+
+    $this->actingAs($user)->get(route('chordsystem'))->assertNotFound();
+
+    $this->actingAs($user)
+        ->get(route('dashboard'))
+        ->assertInertia(fn ($page) => $page->where('chordSystem', null));
+});
+
+test('the church site does not offer chordsystem when it is not the session provider', function () {
+    config(['shared-auth.role' => 'client']);
+
+    $this->actingAs(User::factory()->create())
+        ->get(route('chordsystem'))
+        ->assertNotFound();
 });
 
 test('logging out of the church site also ends the chordsystem session', function () {
