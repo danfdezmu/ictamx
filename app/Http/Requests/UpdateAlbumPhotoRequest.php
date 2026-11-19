@@ -9,7 +9,9 @@ use Illuminate\Foundation\Http\FormRequest;
 
 class UpdateAlbumPhotoRequest extends FormRequest
 {
-    use ParsesPhotoTags;
+    use ParsesPhotoTags {
+        prepareForValidation as private preparePhotoTags;
+    }
 
     public function authorize(): bool
     {
@@ -18,13 +20,24 @@ class UpdateAlbumPhotoRequest extends FormRequest
         return $photo instanceof GalleryPhoto && ($this->user()?->can('update', $photo) ?? false);
     }
 
+    protected function prepareForValidation(): void
+    {
+        $this->preparePhotoTags();
+
+        $description = trim($this->string('alt')->toString());
+
+        $this->merge([
+            'alt' => $description === '' ? null : $description,
+        ]);
+    }
+
     /**
      * @return array<string, ValidationRule|array<mixed>|string>
      */
     public function rules(): array
     {
         return [
-            'alt' => ['required', 'string', 'max:160'],
+            'alt' => ['nullable', 'string', 'max:160'],
             ...$this->tagRules(),
         ];
     }
@@ -35,7 +48,6 @@ class UpdateAlbumPhotoRequest extends FormRequest
     public function messages(): array
     {
         return [
-            'alt.required' => 'Escribe una descripción de la foto.',
             'alt.max' => 'La descripción no puede pasar de 160 caracteres.',
             ...$this->tagMessages(),
         ];

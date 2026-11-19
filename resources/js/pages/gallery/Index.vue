@@ -20,7 +20,7 @@ defineProps<{
     photos: Array<{
         id: number;
         url: string;
-        alt: string;
+        alt: string | null;
         author: string;
         album_id: number | null;
         album: string | null;
@@ -90,7 +90,7 @@ function confirmDelete(event: MouseEvent): void {
                     </tr>
                     <tr v-for="photo in photos" :key="photo.id" class="border-b last:border-b-0">
                         <td class="px-4 py-3">
-                            <img :src="photo.url" :alt="photo.alt" class="h-16 w-28 rounded-md object-cover" />
+                            <img :src="photo.url" :alt="photo.alt || ''" class="h-16 w-28 rounded-md object-cover" />
                         </td>
                         <td class="px-4 py-3">{{ photo.alt }}</td>
                         <td class="px-4 py-3">

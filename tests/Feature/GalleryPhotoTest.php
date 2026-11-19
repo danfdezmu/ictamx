@@ -92,7 +92,9 @@ test('multimedia can add a photo to an album with its tag', function () {
     Storage::disk('public')->assertExists($photo->path);
 });
 
-test('adding a photo requires an image and a description', function () {
+test('adding a photo requires an image and the description can be blank', function () {
+    Storage::fake('public');
+
     $user = User::factory()->withRole(UserRole::Multimedia)->create();
     $album = Album::createFor($user, 'Jóvenes');
 
@@ -100,8 +102,15 @@ test('adding a photo requires an image and a description', function () {
         ->post(route('albums.photos.store', $album), [])
         ->assertSessionHasErrors([
             'image' => 'Selecciona una imagen.',
-            'alt' => 'Escribe una descripción de la foto.',
-        ]);
+        ])
+        ->assertSessionDoesntHaveErrors('alt');
+
+    $this->post(route('albums.photos.store', $album), [
+        'image' => UploadedFile::fake()->image('culto.jpg'),
+        'alt' => '   ',
+    ])->assertRedirect(route('albums.show', $album));
+
+    expect(GalleryPhoto::query()->sole()->alt)->toBeNull();
 });
 
 test('adding a photo rejects a file that is not an image', function () {

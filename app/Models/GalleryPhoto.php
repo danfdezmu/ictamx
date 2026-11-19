@@ -15,7 +15,7 @@ use Illuminate\Support\Carbon;
  * @property int|null $user_id
  * @property int|null $album_id
  * @property string $path
- * @property string $alt
+ * @property string|null $alt
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
  */

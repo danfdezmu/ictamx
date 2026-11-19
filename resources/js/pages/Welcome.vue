@@ -8,7 +8,7 @@ const props = defineProps<{
     church: string;
     gallery: Array<{
         src: string;
-        alt: string;
+        alt: string | null;
     }>;
 }>();
 
@@ -449,7 +449,7 @@ onUnmounted(() => {
                                     v-for="(photo, photoIndex) in latestPhotos"
                                     :key="photo.src"
                                     :src="photo.src"
-                                    :alt="photo.alt"
+                                    :alt="photo.alt || ''"
                                     :aria-hidden="photoIndex !== slideIndex"
                                     class="aspect-video w-full shrink-0 object-cover"
                                     draggable="false"

@@ -12,7 +12,7 @@ defineProps<{
     photos: Array<{
         id: number;
         src: string;
-        alt: string;
+        alt: string | null;
     }>;
     album: {
         id: number;
@@ -90,8 +90,8 @@ function sectionHref(hash: string): string {
                 </p>
                 <div v-else class="mt-12 grid gap-6 sm:grid-cols-2">
                     <figure v-for="photo in photos" :key="photo.id" class="overflow-hidden rounded-3xl border border-white/10">
-                        <img :src="photo.src" :alt="photo.alt" class="aspect-video w-full object-cover" />
-                        <figcaption class="px-5 py-4 text-sm text-[#f4efe6]/75">{{ photo.alt }}</figcaption>
+                        <img :src="photo.src" :alt="photo.alt || ''" class="aspect-video w-full object-cover" />
+                        <figcaption v-if="photo.alt" class="px-5 py-4 text-sm text-[#f4efe6]/75">{{ photo.alt }}</figcaption>
                     </figure>
                 </div>
             </div>

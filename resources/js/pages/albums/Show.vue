@@ -1,8 +1,10 @@
 <script setup lang="ts">
 import { Form, Head, Link } from '@inertiajs/vue3';
+import { ref } from 'vue';
 import AlbumController from '@/actions/App/Http/Controllers/AlbumController';
 import AlbumPhotoController from '@/actions/App/Http/Controllers/AlbumPhotoController';
 import GalleryPhotoController from '@/actions/App/Http/Controllers/GalleryPhotoController';
+import PhotoCropper from '@/components/gallery/PhotoCropper.vue';
 import TagPicker from '@/components/gallery/TagPicker.vue';
 import Heading from '@/components/Heading.vue';
 import InputError from '@/components/InputError.vue';
@@ -32,11 +34,13 @@ defineProps<{
     photos: Array<{
         id: number;
         url: string;
-        alt: string;
+        alt: string | null;
         tags: Array<{ id: number; name: string }>;
         can_delete: boolean;
     }>;
 }>();
+
+const cropBusy = ref(false);
 
 function confirmDelete(event: MouseEvent): void {
     if (!confirm('¿Eliminar esta foto?')) {
@@ -69,32 +73,27 @@ function confirmDelete(event: MouseEvent): void {
             enctype="multipart/form-data"
             reset-on-success
             class="grid gap-4 rounded-xl border p-4"
-            v-slot="{ errors, processing }"
+            v-slot="{ errors, processing, wasSuccessful }"
         >
             <h2 class="text-base font-medium">Subir foto</h2>
             <p class="text-sm text-muted-foreground">
                 Esta foto llevará la etiqueta <span class="font-medium text-foreground">{{ album.tag }}</span>.
             </p>
-            <div class="grid gap-4 md:grid-cols-2">
+            <PhotoCropper :error="errors.image" :clear-when="wasSuccessful" @update:busy="cropBusy = $event">
                 <div class="grid gap-2">
-                    <Label for="image">Imagen</Label>
-                    <Input id="image" type="file" name="image" accept="image/jpeg,image/png,image/webp" required />
-                    <InputError :message="errors.image" />
-                </div>
-                <div class="grid gap-2">
-                    <Label for="alt">Descripción</Label>
-                    <Input id="alt" name="alt" type="text" maxlength="160" required placeholder="Qué se ve en la foto" />
+                    <Label for="alt">Descripción (opcional)</Label>
+                    <Input id="alt" name="alt" type="text" maxlength="160" placeholder="Qué se ve en la foto" />
                     <InputError :message="errors.alt" />
                 </div>
-            </div>
+            </PhotoCropper>
             <TagPicker :tags="tags" :selected="[]" input-id="new-photo-tags" />
             <InputError :message="errors.tags" />
-            <Button type="submit" :disabled="processing" class="w-fit">Agregar foto</Button>
+            <Button type="submit" :disabled="processing || cropBusy" class="w-fit">Agregar foto</Button>
         </Form>
 
         <div class="grid gap-4">
             <article v-for="photo in photos" :key="photo.id" class="grid gap-4 rounded-xl border p-4 md:grid-cols-[9rem_1fr]">
-                <img :src="photo.url" :alt="photo.alt" class="h-24 w-36 rounded-md object-cover" />
+                <img :src="photo.url" :alt="photo.alt || ''" class="h-24 w-36 rounded-md object-cover" />
                 <Form
                     v-bind="AlbumPhotoController.update.form({ album: album.id, galleryPhoto: photo.id })"
                     class="grid gap-3"
@@ -104,8 +103,8 @@ function confirmDelete(event: MouseEvent): void {
                         <span class="rounded-full bg-primary px-3 py-1 text-primary-foreground">{{ album.tag }}</span>
                     </div>
                     <div class="grid gap-2">
-                        <Label :for="`alt-${photo.id}`">Descripción</Label>
-                        <Input :id="`alt-${photo.id}`" name="alt" type="text" maxlength="160" required :default-value="photo.alt" />
+                        <Label :for="`alt-${photo.id}`">Descripción (opcional)</Label>
+                        <Input :id="`alt-${photo.id}`" name="alt" type="text" maxlength="160" :default-value="photo.alt || ''" />
                         <InputError :message="errors.alt" />
                     </div>
                     <TagPicker :tags="tags" :selected="photo.tags.map((tag) => tag.name)" :input-id="`tags-${photo.id}`" />

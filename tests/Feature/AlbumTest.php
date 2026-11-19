@@ -81,6 +81,24 @@ test('editing photo tags keeps the album tag', function () {
         ->and($photo->tags()->pluck('name')->sort()->values()->all())->toBe(['Celebración', 'Jóvenes']);
 });
 
+test('clearing a photo description leaves it blank', function () {
+    $user = User::factory()->withRole(UserRole::Multimedia)->create();
+    $album = Album::createFor($user, 'Jóvenes');
+    $photo = GalleryPhoto::factory()->create([
+        'user_id' => $user->id,
+        'album_id' => $album->id,
+        'alt' => 'Reunión',
+    ]);
+
+    $this->actingAs($user)
+        ->patch(route('albums.photos.update', [$album, $photo]), [
+            'alt' => '',
+        ])
+        ->assertRedirect(route('albums.show', $album));
+
+    expect($photo->refresh()->alt)->toBeNull();
+});
+
 test('a photo from another album cannot be edited here', function () {
     $user = User::factory()->withRole(UserRole::Admin)->create();
     $album = Album::createFor($user, 'Jóvenes');

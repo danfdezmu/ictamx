@@ -48,7 +48,7 @@ class PublicGalleryController extends Controller
     }
 
     /**
-     * @return list<array{id: int, src: string, alt: string}>
+     * @return list<array{id: int, src: string, alt: string|null}>
      */
     private function photos(?Album $album = null): array
     {

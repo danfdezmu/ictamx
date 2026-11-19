@@ -30,7 +30,7 @@ class AlbumPhotoController extends Controller
 
         $photo = $album->photos()->make([
             'path' => $path,
-            'alt' => $request->string('alt')->toString(),
+            'alt' => $request->validated('alt'),
         ]);
         $photo->user()->associate($user);
         $photo->save();
@@ -45,7 +45,7 @@ class AlbumPhotoController extends Controller
         abort_unless($galleryPhoto->album_id === $album->id, 404);
 
         $galleryPhoto->update([
-            'alt' => $request->string('alt')->toString(),
+            'alt' => $request->validated('alt'),
         ]);
 
         $galleryPhoto->syncTags($album, $request->input('tags', []));
