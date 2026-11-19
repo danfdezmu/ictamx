@@ -29,7 +29,7 @@ class GalleryPhotoSeeder extends Seeder
         ];
 
         foreach ($photos as $photo) {
-            $source = public_path('gallery/'.$photo['file']);
+            $source = database_path('seeders/images/'.$photo['file']);
 
             if (! is_file($source)) {
                 continue;
